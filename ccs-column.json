@@ -34,8 +34,8 @@
   "allowed_payees constraint carries digest-only entries; payee judgment relies on disclosed merchant objects within the same bundle"
  ],
  "counts": {
-  "verified": 16,
-  "violated": 14,
+  "verified": 15,
+  "violated": 15,
   "unresolved": 8
  },
  "self_checks": [
@@ -103,6 +103,18 @@
    "bundle": "s11-redeemed-twice-small",
    "expect_contains": "violated",
    "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-wrong-payee vs s3-wrong-payee",
+   "expect_contains": "both-violated",
+   "got": "violated vs violated",
+   "achieved": true
+  },
+  {
+   "bundle": "all-rows-name-direction",
+   "expect_contains": "no-fail-named-row-verified",
+   "got": "clean",
    "achieved": true
   }
  ],
@@ -640,8 +652,8 @@
     "chain": 0,
     "transaction_id": "txn-1",
     "amount_as_presented": "199.00",
-    "ccs": "verified",
-    "departed": null,
+    "ccs": "violated",
+    "departed": "payee merchant_2 not in allowed list",
     "missing": null,
     "receipt": {
      "bound": true,

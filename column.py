@@ -240,18 +240,26 @@ def judge_bundle(fx_name, name, b, trust, row_ref_map):
                     if amt > c.get('max', 10**12):
                         hard.append(f'amount {amt} exceeds amount_range max {c["max"]}')
                 if t == 'payment.allowed_payees':
+                    # 名单两条来源：① constraint 内联完整对象（synthetic 家族）
+                    # ② 独立对象披露（sdk 家族 merchant_1 形态）；vct 对象整体披露不算成员
+                    # （closed mandate 的 payee 嵌在 vct 对象内，绝不混入名单——防自证循环）
                     allowed_ids = set()
-                    for a in c.get('allowed', []):
-                        # allowed 披露 digest 无法展开（只给 digest），跳过；payee 名单在披露里
-                        pass
-                    # payee 判定：closed mandate payee 是否与 open mandate allowed 披露一致
-                    # allowed 的具体名单藏在披露值里，需要从本块披露展开
+                    for a in (c.get('allowed') or []):
+                        if isinstance(a, dict) and a.get('id'):
+                            allowed_ids.add(a['id'])
+                    list_established = bool(allowed_ids)
                     for key, val in rec.get('disclosures', []):
-                        if isinstance(val, dict) and val.get('id') and 'name' in val:
+                        if (isinstance(val, dict) and 'vct' not in val
+                                and val.get('id') and 'name' in val):
                             allowed_ids.add(val['id'])
+                            list_established = True
                     payee_id = ((closed_m or {}).get('payee') or {}).get('id')
-                    if payee_id and allowed_ids and payee_id not in allowed_ids:
+                    if payee_id and list_established and payee_id not in allowed_ids:
                         hard.append(f'payee {payee_id} not in allowed list')
+                    elif payee_id and not list_established:
+                        # 2026-11-25 s3 误判根因：名单无法建立曾被静默跳过=当无约束。
+                        # 未知是 held（unresolved），不是 no-constraint。
+                        soft.append('allowed_payees constraint present but list not resolvable — held, not skipped')
                 if t == 'payment.budget':
                     pass  # 预算在行尾统一累计判
 
@@ -374,6 +382,29 @@ def main():
               'unresolved' if any(r['ccs'] == 'unresolved' for r in rows) else 'verified')
         self_checks.append({'bundle': bundle, 'expect_contains': expect, 'got': got,
                             'achieved': (got == expect) or (expect == 'violated' and got == 'violated')})
+
+    # 关系级断言（2026-11-25 nmatt1 复核抓出 s3 误判后追加——行级自检是循环论证，关系级才算对照）
+    # R1 跨家族一致性：同一语义（wrong-payee）在两个家族必须同判 violated
+    def got_of(bundle):
+        rows = [r for fx, rows_ in families.items() for r in rows_ if r['bundle'] == bundle and r.get('chain') is not None]
+        return 'violated' if any(r['ccs'] == 'violated' for r in rows) else (
+               'unresolved' if any(r['ccs'] == 'unresolved' for r in rows) else 'verified')
+    g_sdk, g_s3 = got_of('sdk-wrong-payee'), got_of('s3-wrong-payee')
+    self_checks.append({'bundle': 'sdk-wrong-payee vs s3-wrong-payee',
+                        'expect_contains': 'both-violated',
+                        'got': f'{g_sdk} vs {g_s3}',
+                        'achieved': g_sdk == 'violated' and g_s3 == 'violated'})
+    # R2 fixture 名字方向断言：设计名含失败词的行不得为 verified
+    # （redeemed-twice 的首呈现 verified 是设计行为——重放判在第二次出现，见 dictionary；
+    #   wrong-/altered 类名字行 verified 则必为误判）
+    FAILWORDS = ('wrong-', 'altered')
+    bad = [r['bundle'] for fx, rows_ in families.items() for r in rows_
+           if r.get('chain') is not None and r['ccs'] == 'verified'
+           and any(w in r['bundle'] for w in FAILWORDS)]
+    self_checks.append({'bundle': 'all-rows-name-direction',
+                        'expect_contains': 'no-fail-named-row-verified',
+                        'got': ('clean' if not bad else 'FAIL:' + ','.join(bad)),
+                        'achieved': not bad})
 
     counts = {}
     for fx, rows in families.items():

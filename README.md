@@ -38,6 +38,8 @@ Fixtures are NOT copied here — the CI downloads them from
   issuer-signed JWT only (per-disclosure digests still anchor the claim set). Our first draft
   mis-scored it `violated`; the published column verifies the variant and emits a named
   observation. It is a **binding-variant conformance test, not an integrity failure**.
+- **F5 (rev2 correction, 2026-11-25)**: `s3-wrong-payee` was mis-scored `verified` in rev1 — the synthetic family's `allowed_payees` constraint carries the full list inline, but the checker only consulted independent object disclosures; when no list was resolvable the check was silently skipped (unknown treated as no-constraint). Fix: list established from constraint inline objects OR independent disclosures; unresolvable list is now held `unresolved`, never skipped. Two relational self-checks added (cross-family consistency; fixture-name direction) — the rev1 self-check suite was row-level only, which is circular; relational assertions are the fix.
+
 - **Gap (printed as a gap)**: receipts carry no amount; the settled value is not establishable
   from these artifacts.
 
@@ -48,7 +50,7 @@ python3 column.py          # exit 0 = all 11 self-checks achieved
 sha256sum -c manifest.sha256
 ```
 
-Latest: `ccs-column.json` — 38 rows across three families (16 verified / 14 violated / 8 unresolved).
+Latest: `ccs-column.json` — 38 rows across three families (15 verified / 15 violated / 8 unresolved) — rev2: s3-wrong-payee corrected 2026-11-25 after independent review (nmatt1, AP2#402).
 
 ## License
 
