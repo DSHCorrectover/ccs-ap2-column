@@ -1,0 +1,904 @@
+{
+ "format": "ccs-column/1.0",
+ "joined": "2026-11-25",
+ "for": "google-agentic-commerce/AP2#402 crosswalk",
+ "judged_by": "Correctover receipt-layer (independent CCS replay), Guigui Wang <wangguigui@correctover.com> — IETF draft-correctover-ccs rev10",
+ "object_of_judgment": "the receipt layer and every digest binding: signatures, disclosure digests, kb sd_hash, receipt.reference join, conditional checkout bindings, cumulative constraints — recomputed, not trusted",
+ "inputs": {
+  "sdk-bundles.json": {
+   "note": "fetched from stafordtituss/amep packages/conformance/test/fixtures/ap2/",
+   "sha256": "7e1dd6d97003d11f61ee2b60625bc1fff282d9a5f1eaa7426b276bbd3140b61f"
+  },
+  "sdk-bundles-v2.json": {
+   "note": "fetched from stafordtituss/amep packages/conformance/test/fixtures/ap2/",
+   "sha256": "70626262730fd4e057fb49aa5a404268f8e8192d6b1d3b0f460d3eb5c4a63a05"
+  },
+  "bundles.json": {
+   "note": "fetched from stafordtituss/amep packages/conformance/test/fixtures/ap2/",
+   "sha256": "bd530228cb9880d33f49016ab85f426a6c0e9668f3b6e47734b4aa779a71c4fc"
+  }
+ },
+ "method": "independent implementation (sdjwt.py + column.py, python3/cryptography): SD-JWT disclosures resolved, all ES256 signatures recomputed (issuer=userJwk, agent=cnf.jwk of open mandate, checkout kb=checkout cnf, receipts=processorJwk), every disclosure digest and kb sd_hash recomputed, receipts joined to presentations by recomputed reference=sha256(kb-jwt) (no positional assumption), v2 conditional bindings rechecked (conditional_transaction_id==checkout kb sd_hash; checkout_hash==transaction_id), constraints evaluated cumulatively across the bundle; budget.max read in major units, amounts in minor units (anchored by amount_range conformance); unknown outcomes held as named unresolved, never promoted",
+ "dictionary": [
+  "verified",
+  "violated",
+  "unresolved"
+ ],
+ "definitions": {
+  "verified": "every recomputation passes and all constraints hold for this presentation",
+  "violated": "a hard failure with the departure named: signature/digest/sd_hash/reference binding invalid, constraint breached, or closed mandate replayed",
+  "unresolved": "the presented set cannot establish the outcome: receipt absent or bound elsewhere, status outside enum, predecessor unknown — held as a named state"
+ },
+ "gaps_printed_as_gaps": [
+  "payment_receipt carries no amount field: the settled value is not establishable from these artifacts (issuance property of the schema, shared boundary)",
+  "allowed_payees constraint carries digest-only entries; payee judgment relies on disclosed merchant objects within the same bundle"
+ ],
+ "counts": {
+  "verified": 16,
+  "violated": 14,
+  "unresolved": 8
+ },
+ "self_checks": [
+  {
+   "bundle": "sdk-issuer-jwt-hash",
+   "expect_contains": "verified",
+   "got": "verified",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-over-range",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-wrong-payee",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-redeemed-twice",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-declined",
+   "expect_contains": "verified",
+   "got": "verified",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-lost-receipt",
+   "expect_contains": "unresolved",
+   "got": "unresolved",
+   "achieved": true
+  },
+  {
+   "bundle": "sdk-budget",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "s7-receipt-for-another-mandate",
+   "expect_contains": "unresolved",
+   "got": "unresolved",
+   "achieved": true
+  },
+  {
+   "bundle": "s8-altered-amount",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "s10-redeemed-twice",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  },
+  {
+   "bundle": "s11-redeemed-twice-small",
+   "expect_contains": "violated",
+   "got": "violated",
+   "achieved": true
+  }
+ ],
+ "rows": {
+  "sdk-bundles.json": [
+   {
+    "bundle": "sdk-within",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-over-range",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "250.00",
+    "ccs": "violated",
+    "departed": "amount 25000 exceeds amount_range max 20000",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=250.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-wrong-payee",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "violated",
+    "departed": "payee merchant_2 not in allowed list",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-declined",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true,
+     "processor_outcome": "Error"
+    },
+    "receipt_status": "Error",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-lost-receipt",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "no receipt bound to this presentation (reference rule)",
+    "receipt": {
+     "bound": false
+    },
+    "receipt_status": null,
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "no receipt bound to this presentation"
+    ]
+   },
+   {
+    "bundle": "sdk-budget",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-budget",
+    "chain": 1,
+    "transaction_id": "txn-2",
+    "amount_as_presented": "150.00",
+    "ccs": "violated",
+    "departed": "cumulative spend 349.00 exceeds budget max 300.0",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=349.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-issuer-jwt-hash",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-redeemed-twice",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "50.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-redeemed-twice",
+    "chain": 1,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "50.00",
+    "ccs": "violated",
+    "departed": "closed mandate txn-1 replayed (byte-equal transaction_id presented twice)",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   }
+  ],
+  "sdk-bundles-v2.json": [
+   {
+    "bundle": "sdk-within",
+    "chain": 0,
+    "transaction_id": "IEFD2AWz78SAp5E4ZMpoubz5hSVJLHuCrOCQwRsvOWE",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-over-range",
+    "chain": 0,
+    "transaction_id": "OI2IX3FtelCqIop28cnrIldbW70Ozl6W3S25plSJF0o",
+    "amount_as_presented": "250.00",
+    "ccs": "violated",
+    "departed": "amount 25000 exceeds amount_range max 20000",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=250.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-wrong-payee",
+    "chain": 0,
+    "transaction_id": "BDezYPKq9t_bC8lM2s0f4Mutr2cm2HSborhBFYmPWNU",
+    "amount_as_presented": "199.00",
+    "ccs": "violated",
+    "departed": "payee merchant_2 not in allowed list",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-declined",
+    "chain": 0,
+    "transaction_id": "sNfY7S5-BccGql9UnZX8lFRpn01TWUV3TB_sxLdGjJ4",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true,
+     "processor_outcome": "Error"
+    },
+    "receipt_status": "Error",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-lost-receipt",
+    "chain": 0,
+    "transaction_id": "UfwsBVV6Aw17MQpITcjyzXT2OLVJGKRERHqXkIxIhiI",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "no receipt bound to this presentation (reference rule)",
+    "receipt": {
+     "bound": false
+    },
+    "receipt_status": null,
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "no receipt bound to this presentation"
+    ]
+   },
+   {
+    "bundle": "sdk-budget",
+    "chain": 0,
+    "transaction_id": "-8EQAy-qKNewoKScv7C5-9Q4fntxkG4BEctXhU7NWls",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-budget",
+    "chain": 1,
+    "transaction_id": "AB1uWD7_s1G3xLhDaN_WIiKF2W036i8uGOdLi2nvE0c",
+    "amount_as_presented": "150.00",
+    "ccs": "violated",
+    "departed": "cumulative spend 349.00 exceeds budget max 300.0",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=349.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-issuer-jwt-hash",
+    "chain": 0,
+    "transaction_id": "WNsPHqWOsWynd9ml_fskIjWaS81AP2PMCrxix3vLfUo",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-redeemed-twice",
+    "chain": 0,
+    "transaction_id": "v-UNDa30lSLCHJDrCZRvIG2vBJ_jzp2d2lHR1j2OSH4",
+    "amount_as_presented": "50.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-redeemed-twice",
+    "chain": 1,
+    "transaction_id": "v-UNDa30lSLCHJDrCZRvIG2vBJ_jzp2d2lHR1j2OSH4",
+    "amount_as_presented": "50.00",
+    "ccs": "violated",
+    "departed": "closed mandate v-UNDa30lSLCHJDrCZRvIG2vBJ_jzp2d2lHR1j2OSH4 replayed (byte-equal transaction_id presented twice)",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "conditional_binding": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "sdk-ref-other-checkout",
+    "chain": 0,
+    "transaction_id": "AYsqNUCsyf9bax3fdMtCAECCGyVscAcnLafasLE2vAI",
+    "amount_as_presented": "199.00",
+    "ccs": "violated",
+    "departed": "conditional_transaction_id does not match checkout presentation sd_hash",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": true,
+     "checkout_hash_matches": true
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "conditional_transaction_id does not match checkout presentation sd_hash"
+    ]
+   },
+   {
+    "bundle": "sdk-ref-checkout-absent",
+    "chain": 0,
+    "transaction_id": "xmSntn789cszB_XGEQnUVTTuexW6ZPYVoYOy4XvSIkM",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "conditional binding unverifiable: checkout absent from presented set",
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": {
+     "presented": false
+    },
+    "budget_note": "budget.max=300.0 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "conditional binding unverifiable: checkout absent from presented set"
+    ]
+   }
+  ],
+  "bundles.json": [
+   {
+    "bundle": "s1-within",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s2-over-range",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "250.00",
+    "ccs": "violated",
+    "departed": "amount 25000 exceeds amount_range max 20000",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=250.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s3-wrong-payee",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s4-declined",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true,
+     "processor_outcome": "Error"
+    },
+    "receipt_status": "Error",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s5-lost-receipt",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "no receipt bound to this presentation (reference rule)",
+    "receipt": {
+     "bound": false
+    },
+    "receipt_status": null,
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "no receipt bound to this presentation"
+    ]
+   },
+   {
+    "bundle": "s6-budget",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=199.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s6-budget",
+    "chain": 1,
+    "transaction_id": "txn-2",
+    "amount_as_presented": "150.00",
+    "ccs": "violated",
+    "departed": "cumulative spend 349.00 exceeds budget max 300",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=349.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s7-receipt-for-another-mandate",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "no receipt bound to this presentation (reference rule)",
+    "receipt": {
+     "bound": false
+    },
+    "receipt_status": null,
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "no receipt bound to this presentation"
+    ]
+   },
+   {
+    "bundle": "s7-receipt-for-another-mandate",
+    "chain": null,
+    "transaction_id": null,
+    "ccs": "unresolved",
+    "missing": "1 receipt(s) bound to no presented payment in this bundle (orphan)",
+    "orphan_receipt": true
+   },
+   {
+    "bundle": "s8-altered-amount",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "99.00",
+    "ccs": "violated",
+    "departed": "kb: 1 referenced digest(s) with no committed disclosure; kb: 1 disclosure(s) not committed by kb payload",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=99.00",
+    "checks_seen": [
+     "kb: 1 disclosure(s) not committed by kb payload",
+     "kb: 1 referenced digest(s) with no committed disclosure"
+    ]
+   },
+   {
+    "bundle": "s10-redeemed-twice",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "150.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=150.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s10-redeemed-twice",
+    "chain": 1,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "150.00",
+    "ccs": "violated",
+    "departed": "closed mandate txn-1 replayed (byte-equal transaction_id presented twice)",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=150.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s11-redeemed-twice-small",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "50.00",
+    "ccs": "verified",
+    "departed": null,
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s11-redeemed-twice-small",
+    "chain": 1,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "50.00",
+    "ccs": "violated",
+    "departed": "closed mandate txn-1 replayed (byte-equal transaction_id presented twice)",
+    "missing": null,
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=50.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   },
+   {
+    "bundle": "s9-unknown-then-second",
+    "chain": 0,
+    "transaction_id": "txn-1",
+    "amount_as_presented": "199.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "no receipt bound to this presentation (reference rule)",
+    "receipt": {
+     "bound": false
+    },
+    "receipt_status": null,
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=0.00",
+    "checks_seen": [
+     "no receipt bound to this presentation"
+    ]
+   },
+   {
+    "bundle": "s9-unknown-then-second",
+    "chain": 1,
+    "transaction_id": "txn-2",
+    "amount_as_presented": "150.00",
+    "ccs": "unresolved",
+    "departed": null,
+    "missing": "budget cannot be established: predecessor payment outcome unknown (held, not dropped)",
+    "receipt": {
+     "bound": true,
+     "verified": true,
+     "status_valid": true
+    },
+    "receipt_status": "Success",
+    "checkout": null,
+    "budget_note": "budget.max=300 (major units); effective cumulative spend=150.00",
+    "checks_seen": [
+     "all recomputations pass"
+    ]
+   }
+  ]
+ }
+}

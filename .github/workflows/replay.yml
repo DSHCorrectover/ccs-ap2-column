@@ -1,0 +1,16 @@
+name: replay-data-lock
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install cryptography
+      - name: Download pinned fixtures + replay (exit 0 = all self-checks)
+        run: python3 column.py
+      - name: Verify column output with self-checks green
+        run: python3 -c "import json; d=json.load(open('ccs-column.json')); assert all(c['achieved'] for c in d['self_checks']); print('OK', d['counts'])"
